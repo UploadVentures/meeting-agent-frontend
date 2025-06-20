@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Unified Meeting Agent - Chat</title>
+    <link rel="icon" type="image/png" href="./assets/FAVICON.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f5f5f5;
+            --text-color: #333333;
+            --hover-bg: #e5e5e5;
+            --active-bg: #e0e0e0;
+            --border-color: #dddddd;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #1E1E1E;
+            --sidebar-bg: #2C2C2C;
+            --text-color: #ffffff;
+            --hover-bg: #3C3C3C;
+            --active-bg: #3C3C3C;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            transition: background-color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-logo {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar-logo img {
+            height: 80px;
+        }
+
+        .sidebar-logo h2 {
+            margin-top: 10px;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
+        .new-chat-btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .chat-sections-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-section h2 {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .chat-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .chat-list li {
+            padding: 8px 12px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .chat-list li:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .chat-list li.active {
+            background-color: var(--active-bg);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .theme-toggle svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            max-width: calc(100% - 280px);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 40px;
+        }
+
+        .chat-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .sample-queries {
+            display: none;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 80%;
+        }
+
+        .message.system {
+            background-color: var(--sidebar-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .message.system.welcome {
+            text-align: center;
+        }
+
+        .message.error {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .markdown-container {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        /* Estilos para cabeçalhos */
+        .meeting-header-1, .meeting-header-2, .meeting-header-3, .meeting-header-4 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .meeting-header-1 { font-size: 22px; }
+        .meeting-header-2 { font-size: 20px; }
+        .meeting-header-3 { font-size: 18px; }
+        .meeting-header-4 { font-size: 16px; }
+
+        /* Estilos para listas */
+        .meeting-unordered-list, .meeting-ordered-list {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .meeting-list-item {
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+
+        /* Estilos para parágrafos e texto */
+        .meeting-paragraph, .regular-text {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        /* Estilos para destaque */
+        .meeting-bold {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .meeting-italic {
+            font-style: italic;
+            color: #F8C471;
+        }
+
+        /* Estilo para nomes de pessoas */
+        .person-name {
+            color: #5DADE2;
+            font-weight: 600;
+        }
+
+        /* Estilo para texto normal */
+        .regular-text, li.regular-text {
+            font-weight: normal;
+            color: var(--text-color);
+        }
+        
+        /* Adicionar espaço entre reuniões */
+        .message.system hr {
+            margin: 1.5em 0;
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Estilo para seções de resumo */
+        .meeting-summary-section {
+            padding: 10px;
+            margin-top: 15px;
+            border-left: 3px solid #5DADE2;
+            background-color: rgba(93, 173, 226, 0.1);
+        }
+
+        /* Estilo para tabelas */
+        .meeting-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .meeting-table-cell {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Estilo para código */
+        .inline-code {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .code-block {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background-color: var(--sidebar-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: #888;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button svg {
+            color: white;
+            width: 20px;
+            height: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+            }
+
+            .chat-header h1 {
+                font-size: 24px;
+            }
+
+            .sample-queries {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .message.user {
+                max-width: 90%;
+            }
+        }
+
+        /* Dark theme overrides */
+        :root[data-theme="dark"] .markdown-container {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        :root[data-theme="dark"] .meeting-summary-section {
+            background-color: rgba(93, 173, 226, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="./assets/logo-dark.png" alt="Logo" id="themeLogo">
+            <h2>Meeting Agent</h2>
+        </div>
+        <button class="new-chat-btn">+ New Chat</button>
+        <div class="chat-sections-container">
+            <div class="chat-section">
+                <h2>Today</h2>
+                <ul class="chat-list" id="today-chats">
+                </ul>
+            </div>
+            <div class="chat-section">
+                <h2>Previous 7 days</h2>
+                <ul class="chat-list" id="previous-chats">
+                </ul>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle">
+                <svg class="sun-icon" viewBox="0 0 24 24">
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51zM12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>Unified Meeting Agent</h1>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system welcome">
+                    <p>Ask questions about meetings with specific companies or people</p>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <p>🔍 Searching meeting information...</p>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask about meetings related to a company...">
+                <button class="send-button" id="sendButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            &copy; Copyright 2025 Upload Global LLC | All Rights Reserved
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API Configuration
+            const API_CONFIG = {
+                ENDPOINT: 'https://nj5jtx7cb9.execute-api.us-east-1.amazonaws.com/Prod/router-meeting',
+                TIMEOUT: 60000 // 60 seconds
+            };
+            
+            // Get session data
+            const userId = localStorage.getItem('userId') || 'demo-user';
+            const sessionId = localStorage.getItem('sessionId') || 'session-' + Date.now();
+            
+            // DOM elements
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatMessages = document.getElementById('chatMessages');
+            const loading = document.getElementById('loading');
+            const themeToggle = document.getElementById('themeToggle');
+            const newChatBtn = document.querySelector('.new-chat-btn');
+            const themeLogo = document.getElementById('themeLogo');
+
+            // Theme management
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            
+            function updateLogoForTheme(theme) {
+                if (themeLogo) {
+                    themeLogo.src = theme === 'dark' ? './assets/logo-dark.png' : './assets/logo-light.png';
+                }
+            }
+
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateLogoForTheme(newTheme);
+                
+                // Toggle icon visibility
+                const sunIcon = themeToggle.querySelector('.sun-icon');
+                const moonIcon = themeToggle.querySelector('.moon-icon');
+                
+                if (newTheme === 'dark') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+
+            // Set initial theme and logo
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateLogoForTheme(savedTheme);
+            
+            if (savedTheme === 'light') {
+                const sunIcon = themeToggle.querySelector('.sun-icon');
+                const moonIcon = themeToggle.querySelector('.moon-icon');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+
+            // Theme toggle event
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Function to fill query from sample
+            function fillQuery(query) {
+                chatInput.value = query;
+                chatInput.focus();
+            }
+
+            // Make fillQuery globally available
+            window.fillQuery = fillQuery;
+
+            // Function to escape HTML
+            function escapeHtml(unsafe) {
+                if (unsafe === undefined || unsafe === null) {
+                    return '';
+                }
+                return String(unsafe)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Function to add message to chat
+            function addMessage(content, type = 'system') {
+                const message = document.createElement('div');
+                message.className = `message ${type}`;
+                message.innerHTML = content;
+                chatMessages.appendChild(message);
+                message.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Function to send to API
+            async function sendToAPI(message) {
+                const requestBody = {
+                    sessionId: sessionId,
+                    userId: userId,
+                    userprompt: message,
+                    intention: "company"
+                };
+
+                console.log('Sending request to API:', requestBody);
+
+                try {
+                    const response = await fetch(API_CONFIG.ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    console.log('API Response Status:', response.status);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const lambdaResponse = await response.json();
+                    console.log('Lambda Response:', lambdaResponse);
+                    
+                    // Extract the body content from Lambda response
+                    let actualData;
+                    if (lambdaResponse.body) {
+                        actualData = typeof lambdaResponse.body === 'string' 
+                            ? JSON.parse(lambdaResponse.body) 
+                            : lambdaResponse.body;
+                    } else {
+                        actualData = lambdaResponse;
+                    }
+                    
+                    return actualData;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+
+            // Função para converter markdown para HTML com formatação aprimorada
+            function convertMarkdownToHTML(markdown) {
+                if (!markdown) return '';
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    sanitize: false
+                });
+                
+                // Pré-processamento do markdown para corrigir formatação
+                let processedMarkdown = markdown
+                    // Corrigir hashtags antes de emojis
+                    .replace(/([#]{2,})\s*(\p{Emoji}|\p{Emoji_Presentation})/gu, function(match, hashtags, emoji) {
+                        return `<h3>${emoji}`;
+                    })
+                    .replace(/([#]{2,})\s+([^\s#]+)\s+(\p{Emoji}|\p{Emoji_Presentation})/gu, function(match, hashtags, text, emoji) {
+                        return `<h3>${emoji} ${text}`;
+                    })
+                    // Corrigir hashtags simples
+                    .replace(/^#\s+(.+)$/gm, '## $1')
+                    // Corrigir asteriscos literais para negrito
+                    .replace(/\*\*(\w+):\*\*/g, '<strong>$1:</strong>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    // Padronizar o formato das reuniões
+                    .replace(/Meeting (\d+):([^\n]+)- Participants:/g, 'Meeting $1:$2\n\nParticipants:')
+                    .replace(/Meeting Date:([^\n]+)\nParticipants:/g, 'Meeting Date:$1\n\nParticipants:')
+                    .replace(/Meeting with ([^\n]+)\n/g, 'Meeting with $1\n\n')
+                    // Adicionar Company: se existir
+                    .replace(/\n\nCompany: ([^\n]+)/g, '\n\nCompany: $1')
+                    // Formatar Topics: em nova linha
+                    .replace(/\) -\s*Topics:/g, ')\n\nTopics:')
+                    .replace(/\) -\s*Topics Discussed:/g, ')\n\nTopics Discussed:')
+                    // Remover bullet de Summary e formatá-lo como Topics
+                    .replace(/•\s*Summary:/g, 'Summary:')
+                    .replace(/•\s*/g, '')
+                    // Adicionar quebras de linha antes de Summary
+                    .replace(/Summary:/g, '\n\nSummary:');
+                
+                // Converter markdown para HTML usando marked
+                const html = marked.parse(processedMarkdown);
+                
+                // Pós-processamento do HTML para adicionar classes e melhorar formatação
+                let enhancedHtml = html
+                    // Adicionar classes aos elementos HTML
+                    .replace(/<h1>/g, '<h1 class="meeting-header-1">')
+                    .replace(/<h2>/g, '<h2 class="meeting-header-2">')
+                    .replace(/<h3>/g, '<h3 class="meeting-header-3">')
+                    .replace(/<h4>/g, '<h4 class="meeting-header-4">')
+                    .replace(/<strong>/g, '<strong class="meeting-bold">')
+                    .replace(/<em>/g, '<em class="meeting-italic">')
+                    .replace(/<code>/g, '<code class="inline-code">')
+                    .replace(/<pre><code>/g, '<pre class="code-block"><code>')
+                    .replace(/<ul>/g, '<ul class="meeting-unordered-list">')
+                    .replace(/<ol>/g, '<ol class="meeting-ordered-list">')
+                    .replace(/<li>/g, '<li class="meeting-list-item">')
+                    .replace(/<table>/g, '<table class="meeting-table">')
+                    .replace(/<td>/g, '<td class="meeting-table-cell">');
+                
+                // Destacar nomes de pessoas e deixar texto normal sem negrito
+                enhancedHtml = enhancedHtml
+                    // Formatar nomes de pessoas em azul
+                    .replace(/(Ivan Gouvea|Thomas Kuczynski|Luciana Migliano|Danilo Simões|Carlos Simonsen|Mariano Garcia-Valino|Enrico Katz|Alfredo Hahn|Jose Ferreira|Naeem Khan|Zan Favero|Alberto Griselli|Fabio Mello De Avellar|Mario Moraes|Mario Girasole|Fernando Domingues|Adolfo Valdivieso|Jeremy Topp|Camila Vargas)/g, '<span class="person-name">$1</span>')
+                    // Remover negrito do texto normal
+                    .replace(/<p>([^<]+)<\/p>/g, function(match, text) {
+                        // Não alterar texto que já contém tags
+                        if (text.includes('<') || text.includes('>')) return match;
+                        return '<p class="regular-text">' + text + '</p>';
+                    })
+                    // Remover negrito de listas
+                    .replace(/<li>([^<]+)<\/li>/g, function(match, text) {
+                        // Não alterar texto que já contém tags
+                        if (text.includes('<') || text.includes('>')) return match;
+                        return '<li class="regular-text">' + text + '</li>';
+                    })
+                    // Formatar apenas os cabeçalhos de forma consistente
+                    .replace(/(Participants:|Topics:|Topics Discussed:|Summary:|Meeting Date:|Meeting with|Company:|Performance Metrics:|New system features:|Notes:)\s*/g, '<strong>$1</strong> ')
+                    // Remover bullets que possam ter ficado
+                    .replace(/<li>•\s*/g, '<li>')
+                    .replace(/<p>•\s*/g, '<p>');
+                
+                // Destacar seções de resumo
+                if (enhancedHtml.includes('<h2>Summary</h2>') || enhancedHtml.includes('<h2>Resumo</h2>')) {
+                    enhancedHtml = enhancedHtml.replace(
+                        /(<h2>(?:Summary|Resumo)<\/h2>[\s\S]*?)(?:<h2>|$)/,
+                        '<div class="meeting-summary-section">$1</div>'
+                    );
+                }
+                
+                return enhancedHtml;
+            }
+            
+            // Function to process API response
+            function processResponse(response) {
+                try {
+                    console.log('Processing API response:', response);
+                    
+                    if (response && response.results && Array.isArray(response.results) && response.results.length > 0) {
+                        response.results.forEach((result) => {
+                            if (result.markdown_content) {
+                                console.log('Creating system message...');
+                                const systemMessage = document.createElement('div');
+                                systemMessage.className = 'message system';
+                                
+                                // Verificar se existe company_name na resposta
+                                let markdown = result.markdown_content;
+                                
+                                // Verificar se temos company_name na resposta
+                                if (result.company_name && 
+                                    result.company_name !== 'none' && 
+                                    result.company_name !== 'null' && 
+                                    result.company_name !== null) {
+                                    console.log('Company name found:', result.company_name);
+                                    // Adicionar o company_name logo após o título da reunião
+                                    if (markdown.includes('Meeting with') || markdown.includes('Meeting:') || markdown.includes('Meeting ')) {
+                                        // Adicionar após a primeira linha que contém Meeting
+                                        const lines = markdown.split('\n');
+                                        let meetingLineIndex = -1;
+                                        
+                                        for (let i = 0; i < lines.length; i++) {
+                                            if (lines[i].includes('Meeting with') || lines[i].includes('Meeting:') || 
+                                                lines[i].includes('Meeting ') || lines[i].includes('Last ')) {
+                                                meetingLineIndex = i;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if (meetingLineIndex >= 0) {
+                                            // Inserir company_name após a linha do meeting
+                                            lines.splice(meetingLineIndex + 1, 0, `\nCompany: ${result.company_name}`);
+                                            markdown = lines.join('\n');
+                                        } else {
+                                            // Se não encontrar linha de meeting, adicionar no início
+                                            markdown = `Company: ${result.company_name}\n\n${markdown}`;
+                                        }
+                                    } else {
+                                        // Se não encontrar meeting, adicionar no início
+                                        markdown = `Company: ${result.company_name}\n\n${markdown}`;
+                                    }
+                                } else {
+                                    console.log('No company name or invalid company name');
+                                    // Adicionar mensagem de company não informada
+                                    if (markdown.includes('Meeting with') || markdown.includes('Meeting:') || markdown.includes('Meeting ')) {
+                                        // Adicionar após a primeira linha que contém Meeting
+                                        const lines = markdown.split('\n');
+                                        let meetingLineIndex = -1;
+                                        
+                                        for (let i = 0; i < lines.length; i++) {
+                                            if (lines[i].includes('Meeting with') || lines[i].includes('Meeting:') || 
+                                                lines[i].includes('Meeting ') || lines[i].includes('Last ')) {
+                                                meetingLineIndex = i;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if (meetingLineIndex >= 0) {
+                                            // Inserir mensagem após a linha do meeting
+                                            lines.splice(meetingLineIndex + 1, 0, `\nCompany: company was not informed.`);
+                                            markdown = lines.join('\n');
+                                        } else {
+                                            // Se não encontrar linha de meeting, adicionar no início
+                                            markdown = `Company: company was not informed.\n\n${markdown}`;
+                                        }
+                                    } else {
+                                        // Se não encontrar meeting, adicionar no início
+                                        markdown = `Company: company was not informed.\n\n${markdown}`;
+                                    }
+                                }
+                                
+                                console.log('Converting markdown to HTML...');
+                                const htmlContent = convertMarkdownToHTML(markdown);
+                                console.log('HTML content length:', htmlContent.length);
+                                
+                                systemMessage.innerHTML = htmlContent;
+                                
+                                chatMessages.appendChild(systemMessage);
+                                systemMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                console.log('Message added successfully');
+                            }
+                        });
+                    } else {
+                        addMessage('<p>No meeting information found for this query.</p>');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing response:', error);
+                    addMessage('<p>Error processing the response. Please try again.</p>', 'error');
+                }
+            }
+
+            // Function to handle sending messages
+            async function handleSendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                console.log('Sending message:', message);
+
+                // Add user message to chat
+                addMessage(`<p>${escapeHtml(message)}</p>`, 'user');
+                
+                // Clear input and show loading
+                chatInput.value = '';
+                loading.classList.add('active');
+
+                try {
+                    console.log('Calling API...');
+                    // Send to API
+                    const response = await sendToAPI(message);
+                    console.log('API response received:', response);
+                    
+                    // Hide loading
+                    loading.classList.remove('active');
+                    
+                    // Process the response
+                    processResponse(response);
+                    
+                } catch (error) {
+                    // Hide loading
+                    loading.classList.remove('active');
+                    
+                    console.error('Error sending message:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    addMessage('<p>Sorry, there was an error processing your request. Please try again.</p>', 'error');
+                }
+            }
+
+            // New chat functionality
+            function startNewChat() {
+                chatMessages.innerHTML = `
+                    <div class="message system welcome">
+                        <p>Ask questions about meetings with specific people</p>
+                    </div>
+                `;
+                chatInput.value = '';
+                chatInput.focus();
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', handleSendMessage);
+            newChatBtn.addEventListener('click', startNewChat);
+            
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSendMessage();
+                }
+            });
+
+            // Focus on input when page loads
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html>

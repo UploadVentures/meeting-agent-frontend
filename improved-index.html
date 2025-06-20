@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Companies and People Meetings</title>
+    <link rel="icon" type="image/png" href="./assets/FAVICON.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Include marked.js library for proper markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f5f5f5;
+            --text-color: #333333;
+            --hover-bg: #e5e5e5;
+            --active-bg: #e0e0e0;
+            --border-color: #dddddd;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #1E1E1E;
+            --sidebar-bg: #2C2C2C;
+            --text-color: #ffffff;
+            --hover-bg: #3C3C3C;
+            --active-bg: #3C3C3C;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 120px;
+            height: auto;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background-color: var(--border-color);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background-color: var(--text-color);
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        [data-theme="dark"] .toggle-switch::before {
+            transform: translateX(25px);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 100%;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 80%;
+        }
+
+        .bot-message {
+            background-color: var(--sidebar-bg);
+            border: 1px solid var(--border-color);
+            max-width: 100%;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background-color: var(--sidebar-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 16px;
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .send-button:hover {
+            background-color: #0056b3;
+        }
+
+        .send-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced markdown styling for meeting content */
+        .markdown-container {
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .markdown-container h1 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 20px 0 15px 0;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .markdown-container h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 18px 0 12px 0;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .markdown-container h3 {
+            font-size: 1.2em;
+            font-weight: 500;
+            margin: 15px 0 10px 0;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .markdown-container h4 {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin: 12px 0 8px 0;
+            color: var(--text-color);
+        }
+
+        .markdown-container p {
+            margin: 10px 0;
+            color: var(--text-color);
+        }
+
+        .markdown-container ul, .markdown-container ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .markdown-container li {
+            margin: 5px 0;
+            color: var(--text-color);
+        }
+
+        .markdown-container strong {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .markdown-container em {
+            font-style: italic;
+            color: var(--text-color);
+        }
+
+        .markdown-container code {
+            background-color: var(--hover-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-container pre {
+            background-color: var(--hover-bg);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .markdown-container pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Special styling for meeting sections with emojis */
+        .markdown-container h2[data-emoji="calendar"],
+        .markdown-container h2[data-emoji="clipboard"],
+        .markdown-container h2[data-emoji="chart"],
+        .markdown-container h2[data-emoji="trending"] {
+            background-color: var(--hover-bg);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 20px 0 15px 0;
+        }
+
+        /* Summary section styling */
+        .markdown-container h2:contains("Summary"),
+        .markdown-container h2:contains("Resumo") {
+            background-color: #007bff20;
+            border-left: 4px solid #007bff;
+            padding: 10px 15px;
+            margin: 25px 0 15px 0;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="./assets/logo.png" alt="Logo" id="logo-img">
+        </div>
+        
+        <div class="theme-toggle">
+            <span>🌙</span>
+            <div class="toggle-switch" onclick="toggleTheme()"></div>
+            <span>☀️</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="markdown-container">
+                        <h2>👋 Welcome to the Meeting Agent!</h2>
+                        <p>Ask me about meetings with specific people or companies. For example:</p>
+                        <ul>
+                            <li>"What meetings did we have with Felipe in the last month?"</li>
+                            <li>"What was discussed in the last 3 meetings with Enrico Katz?"</li>
+                            <li>"Show me all meetings with Turbo AI this year"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" class="input-field" id="messageInput" placeholder="Ask about meetings..." onkeypress="handleKeyPress(event)">
+                <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            // Update logo
+            const logo = document.getElementById('logo-img');
+            logo.src = newTheme === 'dark' ? './assets/logo.png' : './assets/logo-dark.png';
+            
+            // Save preference
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const logo = document.getElementById('logo-img');
+            logo.src = savedTheme === 'dark' ? './assets/logo.png' : './assets/logo-dark.png';
+        });
+
+        // Chat functionality
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addMessage(content, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            if (isUser) {
+                messageDiv.textContent = content;
+            } else {
+                // Use marked.js for proper markdown parsing with emoji support
+                const markdownContainer = document.createElement('div');
+                markdownContainer.className = 'markdown-container';
+                
+                if (typeof marked !== 'undefined') {
+                    // Configure marked for better emoji and formatting support
+                    marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        sanitize: false
+                    });
+                    markdownContainer.innerHTML = marked.parse(content);
+                } else {
+                    // Fallback if marked is not available
+                    markdownContainer.innerHTML = content.replace(/\n/g, '<br>');
+                }
+                
+                messageDiv.appendChild(markdownContainer);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showLoading() {
+            const chatMessages = document.getElementById('chatMessages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message loading';
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.innerHTML = '<div class="spinner"></div><span>Processing your request...</span>';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            
+            // Clear input and disable button
+            input.value = '';
+            sendButton.disabled = true;
+            showLoading();
+            
+            try {
+                // Call the router API
+                const response = await fetch('https://6xqvjwfhg3.execute-api.us-east-1.amazonaws.com/prod/router-meeting-agent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: message
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Router response:', data);
+                
+                hideLoading();
+                
+                if (response.ok) {
+                    if (data.intent_type === 'multiple_persons') {
+                        // Handle multiple persons case
+                        addMessage(`🔍 **Multiple persons found with name '${data.entity_name}':**\n\n${data.additional_info.join(', ')}\n\nPlease specify the full name or provide more context.`);
+                    } else if (data.results && data.results.length > 0) {
+                        // Process results from person or company agents
+                        data.results.forEach(result => {
+                            if (result.markdown_content) {
+                                addMessage(result.markdown_content);
+                            } else if (result.message) {
+                                addMessage(result.message);
+                            } else {
+                                addMessage('No content available for this result.');
+                            }
+                        });
+                    } else {
+                        addMessage('No results found for your query.');
+                    }
+                } else {
+                    if (response.status === 404) {
+                        addMessage(`❌ **Entity not found:** "${message}"\n\nThe person or company you mentioned was not found in our database. Please check the spelling or try a different name.`);
+                    } else {
+                        addMessage(`❌ **Error:** ${data.message || 'An error occurred while processing your request.'}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                addMessage('❌ **Connection Error:** Unable to connect to the server. Please try again later.');
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Focus input on load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').focus();
+        });
+    </script>
+</body>
+</html>
