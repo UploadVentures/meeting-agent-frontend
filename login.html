@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - Login</title>
+    <link rel="icon" type="image/png" href="./assets/FAVICON.png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="background-image">
+    <div class="container">
+        <div class="left-container">
+        </div>
+        <div class="right-container">
+            <div class="logo">
+                <img src="./assets/logo.png" alt="Logo">
+            </div>
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password">
+                </div>
+                
+                <div class="password-options">
+                    <div class="show-password">
+                        <input type="checkbox" id="showPassword">
+                        <label for="showPassword">Show password</label>
+                    </div>
+                    <a href="#" class="forgot-password">Lost your password?</a>
+                </div>
+                
+                <button class="login-button">Log in</button>
+                
+                <div class="divider">
+                    <div class="line line-1"></div>
+                    <span>Or login with</span>
+                    <div class="line line-2"></div>
+                </div>
+                
+                <button class="google-button">
+                    <img src='./assets/google-icon.png' alt="Google">
+                    <span>Google</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        &copy; Copyright 2025 Upload Global LLC | All Rights Reserved
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginButton = document.querySelector('.login-button');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            // Show/Hide password functionality
+            const showPasswordCheckbox = document.getElementById('showPassword');
+            showPasswordCheckbox.addEventListener('change', function() {
+                passwordInput.type = this.checked ? 'text' : 'password';
+            });
+
+            // Login button click handler
+            loginButton.addEventListener('click', function() {
+                // Reset any previous error styles
+                emailInput.style.border = '';
+                passwordInput.style.border = '';
+                
+                // Remove any existing error messages
+                const existingError = document.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                let isValid = true;
+                let errorMessage = '';
+
+                // Validate email
+                if (!emailInput.value.trim()) {
+                    emailInput.style.border = '2px solid red';
+                    errorMessage = 'Please fill in your email';
+                    isValid = false;
+                } else if (!isValidEmail(emailInput.value.trim())) {
+                    emailInput.style.border = '2px solid red';
+                    errorMessage = 'Please enter a valid email address';
+                    isValid = false;
+                }
+
+                // Validate password
+                if (!passwordInput.value.trim()) {
+                    passwordInput.style.border = '2px solid red';
+                    errorMessage = errorMessage ? 'Please fill in all fields' : 'Please fill in your password';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    // Create and show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.style.color = 'red';
+                    errorDiv.style.marginTop = '10px';
+                    errorDiv.style.textAlign = 'center';
+                    errorDiv.textContent = errorMessage;
+                    loginButton.insertAdjacentElement('afterend', errorDiv);
+                    return;
+                }
+                
+                // Check if password is correct
+                const correctPassword = '!@#Upl0@dV3ntur3s';
+                if (passwordInput.value !== correctPassword) {
+                    // Display incorrect password message
+                    passwordInput.style.border = '2px solid red';
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.style.color = 'red';
+                    errorDiv.style.marginTop = '10px';
+                    errorDiv.style.textAlign = 'center';
+                    errorDiv.textContent = 'Password is incorrect. Try Again';
+                    loginButton.insertAdjacentElement('afterend', errorDiv);
+                    return;
+                }
+
+                // Store the email as userId in localStorage
+                localStorage.setItem('userId', emailInput.value.trim());
+                
+                // Generate and store a timestamp-based sessionId
+                const sessionId = 'session-' + Date.now();
+                localStorage.setItem('sessionId', sessionId);
+                
+                // If validation passes, redirect to chat.html
+                window.location.href = 'index.html';
+            });
+
+            // Email validation helper function
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+        });
+    </script>
+</body>
+</html>

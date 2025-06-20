@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Unified Meeting Agent - Chat</title>
+    <link rel="icon" type="image/png" href="./assets/FAVICON.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f5f5f5;
+            --text-color: #333333;
+            --hover-bg: #e5e5e5;
+            --active-bg: #e0e0e0;
+            --border-color: #dddddd;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #1E1E1E;
+            --sidebar-bg: #2C2C2C;
+            --text-color: #ffffff;
+            --hover-bg: #3C3C3C;
+            --active-bg: #3C3C3C;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            transition: background-color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-logo {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar-logo img {
+            height: 80px;
+        }
+
+        .sidebar-logo h2 {
+            margin-top: 10px;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
+        .new-chat-btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .chat-sections-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-section h2 {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .chat-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .chat-list li {
+            padding: 8px 12px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .chat-list li:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .chat-list li.active {
+            background-color: var(--active-bg);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .theme-toggle svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            max-width: calc(100% - 280px);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 40px;
+        }
+
+        .chat-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .sample-queries {
+            display: none;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px; /* Espaço para a caixa de entrada fixa */
+            margin-bottom: 60px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 80%;
+        }
+
+        .message.system {
+            background-color: var(--message-bg);
+            color: var(--text-color);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .message.system.welcome {
+            text-align: center;
+        }
+
+        .message.error {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .message.system h1 {
+            color: #5DADE2;
+            font-size: 1.5em;
+            margin-bottom: 1em;
+            border-bottom: 2px solid #5DADE2;
+            padding-bottom: 0.5em;
+        }
+
+        .message.system h2 {
+            color: #85C1E9;
+            font-size: 1.3em;
+            margin: 1em 0 0.5em 0;
+        }
+
+        .message.system h3 {
+            color: #AED6F1;
+            font-size: 1.1em;
+            margin: 0.8em 0 0.4em 0;
+        }
+
+        .message.system p {
+            margin: 0.5em 0;
+            line-height: 1.6;
+        }
+
+        .message.system ul, .message.system ol {
+            margin: 0.5em 0 0.5em 0;
+            line-height: 1.6;
+            list-style-type: none;
+        }
+
+        .message.system li {
+            margin: 0.5em 0;
+            padding-left: 0;
+        }
+
+        .message.system strong {
+            color: #F7DC6F;
+            font-weight: 600;
+        }
+        
+        .company-info {
+            background-color: rgba(93, 173, 226, 0.1);
+            border-left: 4px solid #5DADE2;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .company-info strong {
+            color: #5DADE2;
+            font-weight: 600;
+        }
+
+        .message.system em {
+            color: #F8C471;
+            font-style: italic;
+        }
+
+        .message.system blockquote {
+            border-left: 4px solid #5DADE2;
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background-color: rgba(93, 173, 226, 0.1);
+            font-style: italic;
+        }
+
+        .message.system code {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #82E0AA;
+        }
+
+        .message.system pre {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .message.system pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .message.system a {
+            color: #5DADE2;
+            text-decoration: none;
+        }
+
+        .message.system a:hover {
+            color: #3498DB;
+            text-decoration: underline;
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--chat-input-bg);
+            border-radius: 0 0 10px 10px;
+            position: fixed;
+            bottom: 40px;
+            left: 280px;
+            right: 0;
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* Card styles */
+        .contact-card, .meeting-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-card h3, .meeting-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .contact-card p, .meeting-card p {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .contact-card strong, .meeting-card strong {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-right: 5px;
+        }
+        
+        /* Estilos específicos para cartões de reunião e markdown */
+        .meeting-card {
+            max-width: 100%;
+        }
+        
+        /* Estilos para botões de teste */
+        .test-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button {
+            background-color: #6366f1;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background-color: #4f46e5;
+        }
+
+        .send-button svg {
+            color: white;
+            width: 20px;
+            height: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            color: var(--text-color);
+            opacity: 0.7;
+            font-size: 12px;
+            position: fixed;
+            bottom: 0;
+            left: 280px;
+            right: 0;
+            background-color: var(--bg-color);
+            z-index: 99;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+            }
+
+            .chat-header h1 {
+                font-size: 24px;
+            }
+
+            .sample-queries {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .message.user {
+                max-width: 90%;
+            }
+        }
+
+        /* Markdown styling */
+        .markdown-container {
+            font-family: var(--font-family);
+            line-height: 1.6;
+            color: var(--text-color);
+            width: 100%;
+            overflow-wrap: break-word;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .markdown-container h1 {
+            font-size: 1.8em;
+            margin-top: 0.8em;
+            margin-bottom: 0.5em;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+        }
+        
+        .markdown-container h2 {
+            font-size: 1.5em;
+            margin-top: 0.8em;
+            margin-bottom: 0.5em;
+            color: var(--primary-color);
+        }
+        
+        .markdown-container h3 {
+            font-size: 1.2em;
+            margin-top: 0.8em;
+            margin-bottom: 0.5em;
+            color: var(--primary-color);
+        }
+        
+        /* Emoji headers styling */
+        .markdown-container .emoji-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            color: var(--accent-color);
+            padding-left: 0.3em;
+        }
+        
+        .markdown-container h1.emoji-header {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0) 100%);
+            padding: 0.3em 0.5em;
+            border-radius: 5px;
+            margin-top: 1em;
+        }
+        
+        .markdown-container h2.emoji-header {
+            background: linear-gradient(90deg, rgba(118, 75, 162, 0.1) 0%, rgba(118, 75, 162, 0) 100%);
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+        }
+        
+        .markdown-container h3.emoji-header {
+            background: linear-gradient(90deg, rgba(80, 200, 120, 0.1) 0%, rgba(80, 200, 120, 0) 100%);
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+        }
+        
+        /* Enhanced list styling */
+        .markdown-container ul {
+            list-style-type: none;
+            margin-bottom: 1em;
+            padding-left: 1.5em;
+        }
+        
+        .markdown-container ul li {
+            position: relative;
+            margin-bottom: 0.5em;
+            padding-left: 0.5em;
+        }
+        
+        .markdown-container ul li::before {
+            content: '•';
+            position: absolute;
+            left: -1em;
+            color: var(--accent-color);
+        }
+        
+        .markdown-container ol {
+            margin-bottom: 1em;
+            padding-left: 2em;
+        }
+        
+        .markdown-container ol li {
+            margin-bottom: 0.5em;
+        }
+        
+        /* Task list styling */
+        .markdown-container ul li input[type="checkbox"] {
+            margin-right: 0.5em;
+        }
+        
+        /* Bold and emphasis */
+        .markdown-container strong {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        
+        .markdown-container em {
+            font-style: italic;
+        }
+        
+        .markdown-container p {
+            margin-bottom: 1em;
+        }
+        
+        /* Code blocks */
+        .markdown-container code {
+            font-family: monospace;
+            background-color: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .markdown-container pre {
+            background-color: var(--code-bg);
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        /* Blockquotes */
+        .markdown-container blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding: 0.5em 1em;
+            margin: 1em 0;
+            background-color: rgba(102, 126, 234, 0.05);
+            border-radius: 0 5px 5px 0;
+            font-style: italic;
+            color: var(--text-color);
+        }
+        
+        /* Section styling */
+        .markdown-container section {
+            margin-bottom: 2em;
+            padding-bottom: 1em;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        /* Table styling */
+        .markdown-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1em;
+        }
+        
+        .markdown-container th {
+            background-color: rgba(102, 126, 234, 0.1);
+            padding: 0.5em;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .markdown-container td {
+            padding: 0.5em;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        /* Dark theme overrides */
+        :root[data-theme="dark"] .markdown-container {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="./assets/logo-dark.png" alt="Logo" id="themeLogo">
+            <h2>Meeting Agent</h2>
+        </div>
+        <button class="new-chat-btn">+ New Chat</button>
+        <div class="chat-sections-container">
+            <div class="chat-section">
+                <h2>Today</h2>
+                <ul class="chat-list" id="today-chats">
+                </ul>
+            </div>
+            <div class="chat-section">
+                <h2>Previous 7 days</h2>
+                <ul class="chat-list" id="previous-chats">
+                </ul>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle">
+                <svg class="sun-icon" viewBox="0 0 24 24">
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51zM12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>Unified Meeting Agent</h1>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system welcome">
+                    <p>Ask questions about meetings with specific companies or people</p>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <p>🔍 Searching meeting information...</p>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask about meetings with someone...">
+                <button class="send-button" id="sendButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            &copy; Copyright 2025 Upload Global LLC | All Rights Reserved
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API Configuration
+            const API_CONFIG = {
+                ENDPOINT: 'https://nj5jtx7cb9.execute-api.us-east-1.amazonaws.com/Prod/router-meeting',
+                TIMEOUT: 60000 // 60 seconds
+            };
+            
+            // Get session data
+            const userId = localStorage.getItem('userId') || 'demo-user';
+            const sessionId = localStorage.getItem('sessionId') || 'session-' + Date.now();
+            
+            // DOM elements
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatMessages = document.getElementById('chatMessages');
+            const loading = document.getElementById('loading');
+            const newChatBtn = document.querySelector('.new-chat-btn');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLogo = document.getElementById('themeLogo');
+
+            // Theme management
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            
+            function updateLogoForTheme(theme) {
+                if (themeLogo) {
+                    themeLogo.src = theme === 'dark' ? './assets/logo-dark.png' : './assets/logo-light.png';
+                }
+            }
+
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateLogoForTheme(newTheme);
+                
+                // Toggle icon visibility
+                const sunIcon = themeToggle.querySelector('.sun-icon');
+                const moonIcon = themeToggle.querySelector('.moon-icon');
+                
+                if (newTheme === 'dark') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+
+            // Set initial theme and logo
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateLogoForTheme(savedTheme);
+            
+            if (savedTheme === 'light') {
+                const sunIcon = themeToggle.querySelector('.sun-icon');
+                const moonIcon = themeToggle.querySelector('.moon-icon');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+
+            // Theme toggle event
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Function to fill query from sample
+            function fillQuery(query) {
+                chatInput.value = query;
+                chatInput.focus();
+            }
+
+            // Make fillQuery globally available
+            window.fillQuery = fillQuery;
+
+            // Function to escape HTML
+            function escapeHtml(unsafe) {
+                if (unsafe === undefined || unsafe === null) {
+                    return '';
+                }
+                return String(unsafe)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Function to add message to chat
+            function addMessage(content, type = 'system') {
+                const message = document.createElement('div');
+                message.className = `message ${type}`;
+                message.innerHTML = content;
+                chatMessages.appendChild(message);
+                message.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Function to send to API
+            async function sendToAPI(message) {
+                const requestBody = {
+                    sessionId: sessionId,
+                    userId: userId,
+                    userprompt: message
+                };
+
+                console.log('Sending request to API:', requestBody);
+
+                try {
+                    const response = await fetch(API_CONFIG.ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    console.log('API Response Status:', response.status);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const lambdaResponse = await response.json();
+                    console.log('Lambda Response:', lambdaResponse);
+                    
+                    // Extract the body content from Lambda response - handle nested body fields
+                    let actualData;
+                    if (lambdaResponse.body) {
+                        // Parse string body to JSON
+                        let parsedBody = typeof lambdaResponse.body === 'string' 
+                            ? JSON.parse(lambdaResponse.body) 
+                            : lambdaResponse.body;
+                        
+                        console.log('Parsed body:', parsedBody);
+                        
+                        // Check if we have a nested body structure
+                        if (parsedBody.body && typeof parsedBody.body === 'string') {
+                            try {
+                                parsedBody = JSON.parse(parsedBody.body);
+                                console.log('Found nested body, parsed again:', parsedBody);
+                            } catch (e) {
+                                console.log('Nested body is not JSON, using as is');
+                            }
+                        }
+                        
+                        actualData = parsedBody;
+                    } else {
+                        actualData = lambdaResponse;
+                    }
+                    
+                    return actualData;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+
+            // Function to process API response
+            function processResponse(response) {
+                try {
+                    console.log('Processing API response:', JSON.stringify(response, null, 2));
+                    
+                    // Safeguard against null or undefined response
+                    if (!response) {
+                        addMessage('<p>Received empty response from server.</p>', 'error');
+                        return;
+                    }
+                    
+                    // Não limpar mensagens anteriores - manter histórico do chat
+                    // Apenas verificar se a última mensagem é do usuário para garantir que a resposta apareça após ela
+                    const allMessages = document.querySelectorAll('.message');
+                    const lastMessage = allMessages[allMessages.length - 1];
+                    
+                    // Se a última mensagem não for do usuário, pode ser uma resposta duplicada
+                    // Vamos verificar se a resposta atual já foi processada anteriormente
+                    let isDuplicate = false;
+                    if (lastMessage && !lastMessage.classList.contains('user')) {
+                        // Verificar se já temos uma resposta com o mesmo conteúdo
+                        if (response.results && response.results[0] && response.results[0].markdown_content) {
+                            const existingResponses = document.querySelectorAll('.markdown-container');
+                            for (let i = 0; i < existingResponses.length; i++) {
+                                // Comparar o início do conteúdo para detectar duplicatas
+                                const existingContent = existingResponses[i].textContent.substring(0, 50);
+                                const newContent = response.results[0].markdown_content.substring(0, 50);
+                                if (existingContent === newContent) {
+                                    console.log('Detected duplicate response, skipping rendering');
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Se for uma resposta duplicada, não processar novamente
+                    if (isDuplicate) {
+                        console.log('Skipping duplicate response');
+                        return;
+                    }
+                    
+                    // Format for person/company meeting agent responses with contact information
+                    if (response.intention && response.results && Array.isArray(response.results) && 
+                        response.results.length > 0 && response.results[0]['Full Name']) {
+                        console.log('Processing contact results format');
+                        processContactResults(response);
+                        return;
+                    }
+                    
+                    // Verificar se há company_name na resposta
+                    if (response.company_name) {
+                        console.log('Found company_name:', response.company_name);
+                        addMessage(`<div class="company-info"><p><strong>Company:</strong> ${escapeHtml(response.company_name)}</p></div>`, 'system');
+                    }
+                    
+                    // Process meeting results with markdown content
+                    if (response.results && Array.isArray(response.results) && response.results.length > 0) {
+                        console.log('Processing results array with ' + response.results.length + ' items');
+                        let hasProcessedContent = false;
+                        
+                        response.results.forEach((result, index) => {
+                            console.log(`Processing result ${index}:`, Object.keys(result));
+                            
+                            // Verificar se há company_name no resultado individual
+                            if (result.company_name) {
+                                console.log('Found company_name in result:', result.company_name);
+                                addMessage(`<div class="company-info"><p><strong>Company:</strong> ${escapeHtml(result.company_name)}</p></div>`, 'system');
+                            }
+                            
+                            if (result.markdown_content) {
+                                console.log('Found markdown_content, processing...');
+                                hasProcessedContent = true;
+                                
+                                const markdownContainer = document.createElement('div');
+                                markdownContainer.className = 'markdown-container';
+                                
+                                // Convert markdown to HTML using marked library
+                                if (typeof marked !== 'undefined') {
+                                    try {
+                                        // Configure marked to handle emojis and other special characters
+                                        marked.setOptions({
+                                            breaks: true,
+                                            gfm: true,
+                                            pedantic: false,
+                                            sanitize: false,
+                                            smartLists: true,
+                                            smartypants: true
+                                        });
+                                        
+                                        // Remover caracteres de escape que possam estar interferindo
+                                        let cleanMarkdown = result.markdown_content;
+                                        // Substituir sequências de escape Unicode por seus caracteres reais
+                                        cleanMarkdown = cleanMarkdown.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
+                                            return String.fromCharCode(parseInt(hex, 16));
+                                        });
+                                        // Substituir \n por quebras de linha reais
+                                        cleanMarkdown = cleanMarkdown.replace(/\\n/g, '\n');
+                                        
+                                        // Remover as hashtags (###) do início dos títulos de reunião
+                                        cleanMarkdown = cleanMarkdown.replace(/^(\s*)#{1,3}\s+/gm, '$1');
+                                        cleanMarkdown = cleanMarkdown.replace(/\*\*(\s*)#{1,3}\s+/g, '**$1');
+                                        cleanMarkdown = cleanMarkdown.replace(/\n(\s*)#{1,3}\s+/g, '\n$1');
+                                        
+                                        console.log('Cleaned markdown:', cleanMarkdown);
+                                        markdownContainer.innerHTML = marked.parse(cleanMarkdown);
+                                        console.log('Markdown converted to HTML with enhanced options');
+                                        
+                                        // Apply special styling for emoji headers
+                                        setTimeout(() => {
+                                            const headers = markdownContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                                            headers.forEach(header => {
+                                                // Check if header contains emoji
+                                                if (/[\u{1F300}-\u{1F6FF}\u{2600}-\u{26FF}]/u.test(header.innerHTML)) {
+                                                    header.classList.add('emoji-header');
+                                                    console.log('Added emoji-header class to:', header.textContent);
+                                                }
+                                            });
+                                        }, 0);
+                                    } catch (markdownError) {
+                                        console.error('Error parsing markdown:', markdownError);
+                                        markdownContainer.innerHTML = '<pre>' + escapeHtml(result.markdown_content) + '</pre>';
+                                    }
+                                } else {
+                                    // Fallback: display as preformatted text
+                                    markdownContainer.innerHTML = '<pre>' + escapeHtml(result.markdown_content) + '</pre>';
+                                    console.log('Marked library not available, using fallback');
+                                }
+                                
+                                const systemMessage = document.createElement('div');
+                                systemMessage.className = 'message system';
+                                systemMessage.appendChild(markdownContainer);
+                                
+                                chatMessages.appendChild(systemMessage);
+                                systemMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else if (result.html_content) {
+                                console.log('Found html_content');
+                                hasProcessedContent = true;
+                                addMessage(result.html_content, 'system');
+                            } else if (result.message) {
+                                console.log('Found message');
+                                hasProcessedContent = true;
+                                addMessage(result.message, 'system');
+                            } else if (result.content) {
+                                console.log('Found content');
+                                hasProcessedContent = true;
+                                addMessage(result.content, 'system');
+                            } else {
+                                console.log('No recognized content format in this result');
+                            }
+                        });
+                        
+                        if (!hasProcessedContent) {
+                            console.log('No content found in results array');
+                            addMessage('<p>No content found in the response.</p>', 'error');
+                        }
+                        
+                        return; // Return after processing results
+                    }
+                    
+                    // Handle other response formats
+                    console.log('No standard format recognized, trying other formats');
+                    processOtherResponseFormats(response);
+                    
+                } catch (error) {
+                    console.error('Error processing response:', error);
+                    addMessage(`<p>Error processing response: ${escapeHtml(error.message)}</p>`, 'error');
+                }
+            }
+            
+            // Function to process contact results
+            function processContactResults(response) {
+                console.log('Processing contact results');
+                // Create a nice HTML response
+                let htmlContent = '';
+                
+                // Add explanation if available
+                if (response.explanation) {
+                    htmlContent += `<p>${escapeHtml(response.explanation)}</p>`;
+                }
+                
+                // Add total results
+                if (response.total_results !== undefined) {
+                    htmlContent += `<p>Found ${response.total_results} contact(s) matching your query.</p>`;
+                }
+                
+                // If we have results, display them
+                if (response.results.length > 0) {
+                    response.results.forEach((contact) => {
+                        htmlContent += `<div class="contact-card">`;
+                        
+                        // Contact name
+                        if (contact['Full Name']) {
+                            htmlContent += `<h3>${escapeHtml(contact['Full Name'])}</h3>`;
+                        }
+                        
+                        // Last meeting if available
+                        if (contact['Last Meeting'] && contact['Last Meeting'] !== 'null' && contact['Last Meeting'] !== 'nan') {
+                            const meetingDate = new Date(contact['Last Meeting']);
+                            htmlContent += `<p><strong>Last Meeting:</strong> ${meetingDate.toLocaleDateString()}</p>`;
+                        } else {
+                            htmlContent += `<p><strong>Last Meeting:</strong> No meeting information available</p>`;
+                        }
+                        
+                        // Organization
+                        if (contact['Current Organization'] && contact['Current Organization'] !== 'nan' && contact['Current Organization'] !== 'null') {
+                            htmlContent += `<p><strong>Organization:</strong> ${escapeHtml(contact['Current Organization'])}</p>`;
+                        }
+                        
+                        // Role
+                        if (contact['Role'] && contact['Role'] !== 'nan' && contact['Role'] !== 'null') {
+                            htmlContent += `<p><strong>Role:</strong> ${escapeHtml(contact['Role'])}</p>`;
+                        }
+                        
+                        // Last contact
+                        if (contact['Last Contact'] && contact['Last Contact'] !== 'null' && contact['Last Contact'] !== 'nan') {
+                            const contactDate = new Date(contact['Last Contact']);
+                            htmlContent += `<p><strong>Last Contact:</strong> ${contactDate.toLocaleDateString()}</p>`;
+                        }
+                        
+                        htmlContent += `</div>`;
+                    });
+                }
+                
+                // Add the formatted content
+                addMessage(htmlContent, 'system');
+            }
+            
+            // Function to process other response formats
+            function processOtherResponseFormats(response) {
+                console.log('Processing other response formats');
+                
+                // Check for html_body or markdown_body in the response
+                if (response.html_body) {
+                    console.log('Found html_body');
+                    // Direct response from router with HTML content
+                    addMessage(response.html_body, 'system');
+                    return true;
+                } 
+                
+                if (response.markdown_body) {
+                    console.log('Found markdown_body');
+                    // Markdown response
+                    const markdownContainer = document.createElement('div');
+                    markdownContainer.className = 'markdown-container';
+                    
+                    if (typeof marked !== 'undefined') {
+                        try {
+                            markdownContainer.innerHTML = marked.parse(response.markdown_body);
+                        } catch (e) {
+                            console.error('Error parsing markdown_body:', e);
+                            markdownContainer.innerHTML = `<pre>${escapeHtml(response.markdown_body)}</pre>`;
+                        }
+                    } else {
+                        markdownContainer.innerHTML = `<pre>${escapeHtml(response.markdown_body)}</pre>`;
+                    }
+                    
+                    const systemMessage = document.createElement('div');
+                    systemMessage.className = 'message system';
+                    systemMessage.appendChild(markdownContainer);
+                    
+                    chatMessages.appendChild(systemMessage);
+                    systemMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return true;
+                } 
+                
+                if (response.message) {
+                    console.log('Found message');
+                    // Simple message response
+                    addMessage(`<p>${escapeHtml(response.message)}</p>`, 'system');
+                    return true;
+                } 
+                
+                if (response.body && typeof response.body === 'string') {
+                    console.log('Found body string, attempting to parse as JSON');
+                    // Try to parse the body as JSON
+                    try {
+                        const bodyJson = JSON.parse(response.body);
+                        console.log('Successfully parsed body as JSON');
+                        // Recursively process the parsed JSON
+                        processResponse(bodyJson);
+                        return true;
+                    } catch (e) {
+                        console.error('Error parsing body as JSON:', e);
+                        // If not valid JSON, check if it looks like markdown
+                        if (response.body.includes('#') || response.body.includes('*') || 
+                            response.body.includes('- ') || response.body.includes('1. ')) {
+                            console.log('Body appears to contain markdown, rendering as such');
+                            const markdownContainer = document.createElement('div');
+                            markdownContainer.className = 'markdown-container';
+                            
+                            if (typeof marked !== 'undefined') {
+                                try {
+                                    markdownContainer.innerHTML = marked.parse(response.body);
+                                } catch (markdownError) {
+                                    markdownContainer.innerHTML = `<pre>${escapeHtml(response.body)}</pre>`;
+                                }
+                            } else {
+                                markdownContainer.innerHTML = `<pre>${escapeHtml(response.body)}</pre>`;
+                            }
+                            
+                            const systemMessage = document.createElement('div');
+                            systemMessage.className = 'message system';
+                            systemMessage.appendChild(markdownContainer);
+                            
+                            chatMessages.appendChild(systemMessage);
+                            systemMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            // Just display as text
+                            addMessage(`<p>${escapeHtml(response.body)}</p>`, 'system');
+                        }
+                        return true;
+                    }
+                } 
+                
+                if (response.intent_type === 'multiple_persons') {
+                    console.log('Found multiple_persons intent');
+                    // Handle multiple persons response
+                    let message = `<p>${escapeHtml(response.message || response.body || '')}</p>`;
+                    if (response.additional_info && Array.isArray(response.additional_info)) {
+                        message += '<ul>';
+                        response.additional_info.forEach(person => {
+                            message += `<li>${escapeHtml(person)}</li>`;
+                        });
+                        message += '</ul>';
+                    }
+                    addMessage(message, 'system');
+                    return true;
+                }
+                
+                // Check if it's a raw string that might be markdown
+                if (typeof response === 'string') {
+                    console.log('Response is a raw string, checking for markdown');
+                    if (response.includes('#') || response.includes('*') || 
+                        response.includes('- ') || response.includes('1. ')) {
+                        console.log('String appears to contain markdown, rendering as such');
+                        const markdownContainer = document.createElement('div');
+                        markdownContainer.className = 'markdown-container';
+                        
+                        if (typeof marked !== 'undefined') {
+                            try {
+                                markdownContainer.innerHTML = marked.parse(response);
+                            } catch (markdownError) {
+                                markdownContainer.innerHTML = `<pre>${escapeHtml(response)}</pre>`;
+                            }
+                        } else {
+                            markdownContainer.innerHTML = `<pre>${escapeHtml(response)}</pre>`;
+                        }
+                        
+                        const systemMessage = document.createElement('div');
+                        systemMessage.className = 'message system';
+                        systemMessage.appendChild(markdownContainer);
+                        
+                        chatMessages.appendChild(systemMessage);
+                        systemMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        return true;
+                    } else {
+                        addMessage(`<p>${escapeHtml(response)}</p>`, 'system');
+                        return true;
+                    }
+                }
+                
+                // Generic fallback
+                console.log('No recognized format, using generic fallback');
+                addMessage(`<p>Received response: ${escapeHtml(JSON.stringify(response))}</p>`, 'system');
+                return true;
+            }
+            
+            // Function to handle sending messages
+            async function handleSendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                console.log('Sending message:', message);
+
+                // Add user message to chat
+                addMessage(`<p>${escapeHtml(message)}</p>`, 'user');
+                
+                // Clear input and show loading
+                chatInput.value = '';
+                loading.classList.add('active');
+
+                try {
+                    console.log('Calling API...');
+                    // Send to API
+                    const response = await sendToAPI(message);
+                    console.log('API response received:', response);
+                    
+                    // Hide loading
+                    loading.classList.remove('active');
+                    
+                    // Adicionar log detalhado para depuração
+                    console.log('Response type:', typeof response);
+                    console.log('Response keys:', Object.keys(response));
+                    
+                    if (response && response.results && Array.isArray(response.results)) {
+                        console.log('Results found:', response.results.length);
+                        response.results.forEach((result, index) => {
+                            console.log(`Result ${index} keys:`, Object.keys(result));
+                            if (result.markdown_content) {
+                                console.log(`Result ${index} has markdown_content`);
+                            }
+                        });
+                    }
+                    
+                    // Process the response
+                    processResponse(response);
+                    
+                } catch (error) {
+                    // Hide loading
+                    loading.classList.remove('active');
+                    
+                    console.error('Error sending message:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    addMessage('<p>Sorry, there was an error processing your request. Please try again.</p>', 'error');
+                }
+            }
+
+            // New chat functionality
+            function startNewChat() {
+                chatMessages.innerHTML = `
+                    <div class="message system welcome">
+                        <p>Ask questions about meetings with specific companies or people</p>
+                    </div>
+                `;
+                chatInput.value = '';
+                chatInput.focus();
+            }
+
+            // As funções de teste foram removidas para manter apenas o layout original
+            
+            // Event listeners
+            sendButton.addEventListener('click', handleSendMessage);
+            newChatBtn.addEventListener('click', startNewChat);
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+
+            // Focus on input when page loads
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html>
